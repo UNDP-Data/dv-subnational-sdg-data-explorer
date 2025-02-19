@@ -2,8 +2,16 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+const countryDiv = document.querySelector('.sub-sdg');
+
+if (countryDiv && countryDiv.id) {
+  const iso = countryDiv.id;
+
+  ReactDOM.createRoot(document.getElementById(iso) as HTMLElement).render(
+    <React.StrictMode>
+      <App iso={iso} />
+    </React.StrictMode>,
+  );
+} else {
+  console.error('Error: No country div found.');
+}

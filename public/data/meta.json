@@ -1,0 +1,44 @@
+[
+  {
+    "SDG": "1",
+    "Target": "1.1.1",
+    "Indicator": "Indicator 1",
+    "IndicatorDescription": "Description",
+    "DataKey": "Indicator 1",
+    "DataSourceName": "",
+    "DataSourceLink": "",
+    "LabelSuffix": "",
+    "LabelPrefix": "",
+    "LabelFormat": ".0f",
+    "BinningRange5": [],
+    "BinningRangeLarge": []
+  },
+  {
+    "SDG": "1",
+    "Target": "1.1.2",
+    "Indicator": "Indicator 2",
+    "IndicatorDescription": "Description",
+    "DataKey": "Indicator 2",
+    "DataSourceName": "",
+    "DataSourceLink": "",
+    "LabelSuffix": "",
+    "LabelPrefix": "",
+    "LabelFormat": ".0f",
+    "BinningRange5": [],
+    "BinningRangeLarge": []
+  },
+  {
+    "SDG": "1",
+    "Target": "1.1.3",
+    "Indicator": "Indicator 3",
+    "IndicatorDescription": "Description",
+    "DataKey": "Indicator 3",
+    "DataSourceName": "",
+    "DataSourceLink": "",
+    "LabelSuffix": "",
+    "LabelPrefix": "",
+    "LabelFormat": ".0f",
+    "BinningRange5": [],
+    "BinningRangeLarge": []
+  }
+]
