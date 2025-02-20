@@ -5,11 +5,11 @@ import App from './App';
 const countryDiv = document.querySelector('.sub-sdg');
 
 if (countryDiv && countryDiv.id) {
-  const iso = countryDiv.id;
+  const iso3 = countryDiv.id;
 
-  ReactDOM.createRoot(document.getElementById(iso) as HTMLElement).render(
+  ReactDOM.createRoot(document.getElementById(iso3) as HTMLElement).render(
     <React.StrictMode>
-      <App iso={iso} />
+      <App iso3={iso3} />
     </React.StrictMode>,
   );
 } else {

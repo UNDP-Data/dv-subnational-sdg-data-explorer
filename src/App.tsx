@@ -1,6 +1,7 @@
 import {
   DropdownSelect,
   H6,
+  SegmentedControl,
   Spinner,
   VisualizationWidget,
   VisualizationWidgetBody,
@@ -26,6 +27,7 @@ import {
 import { useEffect, useState } from 'react';
 
 interface Metadata {
+  IndicatorDescription: string;
   Indicator: string;
   DataKey: string;
 }
@@ -33,35 +35,37 @@ interface Metadata {
 interface OptionType {
   value: string | number;
   label: string;
+  description: string;
 }
 
 interface AppProps {
-  iso: string;
+  iso3: string;
 }
 
-function App({ iso }: AppProps) {
+function App({ iso3 }: AppProps) {
   const [data, setData] = useState<any[] | null>(null);
   const [metadata, setMetadata] = useState<Metadata[]>([]);
+  // const [geoadata, setGeodata] = useState<any[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>('map');
+  const [layoutOrientation, setLayoutOrientation] =
+    useState<string>('horizontal');
   const [selectedIndicator, setSelectedIndicator] = useState<OptionType | null>(
     null,
   );
   const [settingsExpanded, setSettingsExpanded] = useState(true);
 
-  // Load CSV Data
   useEffect(() => {
     const loadData = async () => {
       try {
-        const d = (await fetchAndParseCSV(`/data/${iso}.csv`)) as any[];
+        const d = (await fetchAndParseCSV(`/data/${iso3}.csv`)) as any[];
         setData(d);
       } catch (error) {
         console.error('Error loading data:', error);
       }
     };
     loadData();
-  }, [iso]);
+  }, [iso3]);
 
-  // Load Metadata
   useEffect(() => {
     const loadMetadata = async () => {
       try {
@@ -69,7 +73,6 @@ function App({ iso }: AppProps) {
         const metadataJson = await response.json();
         setMetadata(metadataJson);
 
-        // Set "Indicator 1" as default if available
         const defaultIndicator = metadataJson.find(
           (item: Metadata) => item.Indicator === 'Indicator 1',
         );
@@ -77,6 +80,7 @@ function App({ iso }: AppProps) {
           setSelectedIndicator({
             value: defaultIndicator.DataKey,
             label: defaultIndicator.Indicator,
+            description: defaultIndicator.IndicatorDescription,
           });
         }
       } catch (error) {
@@ -86,9 +90,25 @@ function App({ iso }: AppProps) {
     loadMetadata();
   }, []);
 
+  // useEffect(() => {
+  //   const loadGeodata = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `https://raw.githubusercontent.com/UNDP-Data/dv-country-geojson/refs/heads/main/ADM1/${iso3}.json`,
+  //       );
+  //       const geoDataJson = await response.json();
+  //       setGeodata(geoDataJson);
+  //     } catch (error) {
+  //       console.error('Error loading geodata:', error);
+  //     }
+  //   };
+  //   loadGeodata();
+  // }, []);
+
   const indicatorOptions: OptionType[] = metadata.map(indicator => ({
     value: String(indicator.DataKey),
     label: indicator.Indicator,
+    description: indicator.IndicatorDescription,
   }));
 
   return (
@@ -118,11 +138,30 @@ function App({ iso }: AppProps) {
         </VisualizationWidgetHeader>
         <VisualizationWidgetBody>
           <VisualizationWidgetBodySidebar className='justify-start flex-col g-0'>
+            <div className='border-b py-5 pt-0'>
+              <DropdownSelect
+                placeholder='Select an indicator'
+                label='Select indicator'
+                options={indicatorOptions}
+                value={selectedIndicator}
+                onChange={selected => {
+                  if (!Array.isArray(selected)) {
+                    const selectedOption = indicatorOptions.find(
+                      option => selected && option.value === selected.value,
+                    );
+                    if (selectedOption) {
+                      setSelectedIndicator(selectedOption);
+                    }
+                  }
+                }}
+                isSearchable
+              />
+            </div>
             <div>
               <button
                 type='button'
                 aria-label='Expand or collapse settings'
-                className='flex gap-3 p-5 w-full items-center mb-0'
+                className='flex gap-3 py-5 w-full items-center mb-0'
                 onClick={() => setSettingsExpanded(!settingsExpanded)}
               >
                 {settingsExpanded ? (
@@ -130,35 +169,38 @@ function App({ iso }: AppProps) {
                 ) : (
                   <ChevronRightCircle stroke='#212121' size={18} />
                 )}
-                <H6 className='md:mb-0'>Indicators</H6>
+                <H6 className='md:mb-0 text-sm font-semibold'>Settings</H6>
               </button>
               <div
                 className='settings-sections-options-container'
                 style={{ display: settingsExpanded ? 'flex' : 'none' }}
               >
-                <DropdownSelect
-                  placeholder='Select an indicator'
-                  label='Indicator'
-                  options={indicatorOptions}
-                  value={selectedIndicator}
-                  onChange={selected => {
-                    if (!Array.isArray(selected)) {
-                      setSelectedIndicator(selected);
-                    }
-                  }}
-                  isSearchable
+                <SegmentedControl
+                  label='Layout orientation'
+                  options={[
+                    { label: 'Horizontal', value: 'horizontal' },
+                    { label: 'Vertical', value: 'vertical' },
+                  ]}
+                  onValueChange={setLayoutOrientation}
+                  defaultValue='horizontal'
                 />
               </div>
             </div>
           </VisualizationWidgetBodySidebar>
           <VisualizationWidgetBodyContent>
             {data ? (
-              <div className='h-[2000px] bg-primary-gray-300 w-full'>
-                {selectedTab === 'map' && <div>map</div>}
+              <div className='bg-primary-gray-200 w-full'>
+                {selectedTab === 'map' && selectedIndicator ? (
+                  <div>map placeholder</div>
+                ) : null}
                 {selectedTab === 'ranks' && selectedIndicator ? (
                   <SingleGraphDashboard
                     dataSettings={{ data }}
-                    graphType='horizontalBarChart'
+                    graphType={
+                      layoutOrientation === 'horizontal'
+                        ? 'horizontalBarChart'
+                        : 'verticalBarChart'
+                    }
                     graphDataConfiguration={[
                       { columnId: 'Region name', chartConfigId: 'label' },
                       {
@@ -168,17 +210,61 @@ function App({ iso }: AppProps) {
                     ]}
                     graphSettings={{
                       graphTitle: selectedIndicator.label,
+                      graphDescription: selectedIndicator.description,
+                      padding: '16px 32px 16px 16px',
+                      graphDownload: true,
+                      dataDownload: true,
+                      height: layoutOrientation === 'horizontal' ? 1200 : 600,
+                      barPadding: 0.1,
+                      leftMargin: layoutOrientation === 'horizontal' ? 180 : 32,
+                      truncateBy: layoutOrientation === 'horizontal' ? 24 : 3,
+                      sortData: 'desc',
+                      showTicks: false,
+                    }}
+                  />
+                ) : null}
+                {selectedTab === 'trends' && selectedIndicator ? (
+                  <SingleGraphDashboard
+                    dataSettings={{ data }}
+                    graphType='lineChart'
+                    graphDataConfiguration={[
+                      { columnId: 'Region name', chartConfigId: 'date' },
+                      {
+                        columnId: String(selectedIndicator.value),
+                        chartConfigId: 'y',
+                      },
+                    ]}
+                    graphSettings={{
+                      graphTitle: selectedIndicator.label,
                       padding: '16px 32px 16px 16px',
                     }}
                   />
-                ) : selectedTab === 'ranks' ? (
-                  <p>Please select an indicator</p>
                 ) : null}
-                {selectedTab === 'trends' && <div>trends</div>}
-                {selectedTab === 'disaggregations' && (
-                  <div>disaggregations</div>
-                )}
-                {selectedTab === 'table' && <div>table</div>}
+                {selectedTab === 'disaggregations' && selectedIndicator ? (
+                  <SingleGraphDashboard
+                    dataSettings={{ data }}
+                    graphType='horizontalDumbbellChart'
+                    graphDataConfiguration={[
+                      { columnId: 'Region name', chartConfigId: 'label' },
+                      {
+                        columnId: [
+                          String(selectedIndicator.value),
+                          String(selectedIndicator.value),
+                        ],
+                        chartConfigId: 'x',
+                      },
+                    ]}
+                    graphSettings={{
+                      graphTitle: selectedIndicator.label,
+                      padding: '16px 32px 16px 16px',
+                      graphDownload: true,
+                      dataDownload: true,
+                    }}
+                  />
+                ) : null}
+                {selectedTab === 'table' && selectedIndicator ? (
+                  <div>Table placeholder</div>
+                ) : null}
               </div>
             ) : (
               <div className='bg-primary-gray-300 w-full flex justify-center'>
